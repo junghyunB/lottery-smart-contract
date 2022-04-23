@@ -31,6 +31,9 @@ contract Lottery {
     uint256 constant internal BET_AMOUNT = 5 * 10 ** 15; // 배팅 머니
     uint256 private _pot; // 배팅 모금함
 
+
+    enum BlockStatus {Checkable, NotRevealed, BlockLimitPassed} 
+    enum BettingResult {Fail, Win, Draw}   
     event BET(uint256 index, address bettor, uint256 amount, bytes challenges, uint256 answerBlockNumber);
 
     constructor() {
@@ -63,6 +66,68 @@ contract Lottery {
     // 배팅 함수() queue에 값을 저장
 
     // 검증 함수() 결과값을 검증 값이 틀리면은 팟머니에 넣고 값이 맞으면은 돌려주는 함수
+
+    function distribute() public {
+        // head 3 ...... 286 287 288
+        uint256 cur;
+        BetInfo memory b;
+        BlockStatus currentBlockStatus;
+        for(cur =_head; cur < _tail; cur++) {
+            b = _bets[cur];
+            currentBlockStatus = getBlockStatus(b.answerBlockNumber);
+            // 체크 할 수 있을때 : block.number > AnswerBlockNumber && block.number < BlOCK_LIMIT + AnserBlockNumber 1
+            if(currentBlockStatus == BlockStatus.Checkable) {
+                // if win 베팅한사람이 팟머니들 가짐
+
+                // if fail 베팅한돈이 팟머니에 쌓임
+
+                // if draw 환불
+            }
+            // block이 마이닝 되지 않은상태 : block.number <= AnswerBlockNumber 2
+            if(currentBlockStatus == BlockStatus.NotRevealed) {
+                break;
+            }
+            // block이 제한이 지났을때 : block.number >= AnswerBlockNumber + BLOCK_LIMIT 3
+            if(currentBlockStatus == BlockStatus.BlockLimitPassed) {
+                // 환불 : 환불 이벤트 실행
+            }
+
+            popBet(cur);
+        }
+    }
+        // 정답 확인 함수
+
+    function isMatch(bytes memory challenges, bytes32 answer) public pure returns(uint256) {
+        // challenges 0xab
+        // answer 0xab....ff 32bytes
+
+        bytes memory c1 = challenges;
+        bytes memory c2 = challenges;
+        bytes32 a1 = answer[0];
+        bytes32 a2 = answer[0];
+
+        // 첫번쨰 숫자 꺼내기
+
+    }    
+
+
+
+    function getBlockStatus(uint256 answerBlockNumber) internal view returns (BlockStatus) {
+        if(block.number > answerBlockNumber && block.number < BLOCK_LIMIT + answerBlockNumber) {
+            return BlockStatus.Checkable;
+        }
+
+        if(block.number <= answerBlockNumber) {
+            return BlockStatus.NotRevealed;
+        }
+
+        if(block.number >= answerBlockNumber + BLOCK_LIMIT) {
+            return BlockStatus.BlockLimitPassed;
+        }
+
+        return BlockStatus.BlockLimitPassed;
+    }
+
 
     function getBetInfo(uint256 index) public view returns (uint256 answerBlockNumber, address bettor, bytes memory challenges) {
         BetInfo memory b = _bets[index];
